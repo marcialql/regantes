@@ -11,6 +11,19 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: (process.env.DEV_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
   async headers() {
     return [
+      // Same headers Caddy adds on the VPS, so a managed host (Render) without Caddy keeps them.
+      {
+        source: '/:path*',
+        headers: [
+          ...(process.env.NODE_ENV === 'production'
+            ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000' }]
+            : []),
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'same-origin' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+        ],
+      },
       {
         source: '/sw.js',
         headers: [
